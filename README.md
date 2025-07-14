@@ -1,4 +1,4 @@
-# TRACT QA Automation Assignment
+# Playwright Automation Framework
 
 ## Overview
 
