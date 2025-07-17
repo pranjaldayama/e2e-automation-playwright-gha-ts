@@ -1,21 +1,30 @@
-export const testData = {
+export const testData =   {
+  email: `test${Date.now()}@example.com`, // Use a unique email for each run
+  firstName: 'Playwright',
+  lastName: 'User',
+  street: '123 Test Street',
+  city: 'Amsterdam',
+  state: 'North Holland', // This should match the exact text in the dropdown for Netherlands
+  postcode: '1000AA',
+  country: 'Netherlands',
+  phone: '0612345678',
+  shippingCountry: 'Netherlands',
+  discountCode: '20poff',
+  baseUrl: 'https://magento.softwaretestingboard.com/customer/account/login',
   men: {
     category: ['Men', 'Tops', 'Jackets'],
-    size: 'XS',
-    color: 'Blue',
-    quantity: 1
+    name: 'Style',
+    type: 'Jacket'
   },
   women: {
     category: ['Women', 'Tops', 'Jackets'],
-    size: 'XS',
-    color: 'Blue',
-    quantity: 2
+    name: 'Style',
+    type: 'Insulated'
   },
   gear: {
+    name: 'Activity',
     category: ['Gear', 'Bags'],
     activity: 'Yoga',
     quantity: 1
   },
-  discountCode: '20poff',
-  shippingCountry: 'Netherlands'
 }; 

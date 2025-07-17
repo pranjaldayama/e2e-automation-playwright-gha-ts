@@ -1,54 +1,67 @@
-import { test, expect } from '../fixtures/baseFixture';
-import { HomePage } from '../../pages/homePage';
-import { ProductListingPage } from '../../pages/productListingPage';
-import { ProductDetailsPage } from '../../pages/productDetailsPage';
-import { ShoppingCartPage } from '../../pages/shoppingCartPage';
-import { CheckoutPage } from '../../pages/checkoutPage';
-import { testData } from '../../utils/testData';
-import { logSkip } from '../../utils/helpers';
+// tests/scenarios/men.spec.ts
 
-const BASE_URL = 'https://magento.softwaretestingboard.com/';
+import { test, expect } from "@playwright/test";
+import { ProductListingPage } from "../../pages/productListingPage";
+import { CheckoutPage } from "../../pages/checkoutPage";
+import { testData } from "../../utils/testData";
+import { dismissAnnoyances } from "../../utils/helpers";
+import { BasePage } from "../../pages/basePage";
 
-test.only('Women: Add 2x XS Blue Jacket to cart and checkout with discount', async ({ page }) => {
-  const home = new HomePage(page);
-  const listing = new ProductListingPage(page);
-  const details = new ProductDetailsPage(page);
-  const cart = new ShoppingCartPage(page);
-  const checkout = new CheckoutPage(page);
+test.describe("Womens Category Tests", () => {
+  let basePage: BasePage;
+  let productListingPage: ProductListingPage;
+  let checkoutPage: CheckoutPage;
 
-  await home.goto(BASE_URL);
-  await home.navigateToWomenTopsJackets();
+  test.beforeEach(async ({ page }) => {
+    basePage = new BasePage(page);
+    productListingPage = new ProductListingPage(page);
+    checkoutPage = new CheckoutPage(page);
 
-  // Apply filters
-  const sizeApplied = await listing.applyFilter('Size', testData.women.size);
-  const colorApplied = await listing.applyFilter('Color', testData.women.color);
-  if (!sizeApplied || !colorApplied) {
-    logSkip('No products found for Women Jackets with Size XS and Color Blue');
-    test.skip();
-  }
+    await page.route("**#google_vignette", (route) => {
+      route.abort();
+    });
 
-  // Select product
-  const productSelected = await listing.selectFirstProduct();
-  if (!productSelected) {
-    logSkip('No product available after filtering');
-    test.skip();
-  }
+    await page.route(
+      /googlesyndication\.com|googleadservices\.com|doubleclick\.net|google-analytics\.com/,
+      (route) => {
+        route.abort();
+      },
+    );
 
-  // Select size, color, quantity
-  await details.selectSize(testData.women.size);
-  await details.selectColor(testData.women.color);
-  await details.setQuantity(testData.women.quantity);
-  await details.addToCart();
+    await basePage.login(testData.baseUrl);
+    await dismissAnnoyances(page);
+  });
 
-  // Go to cart and checkout
-  await page.goto(BASE_URL + 'checkout/cart/');
-  await cart.proceedToCheckout();
+  test("Add product from Women -> Tops -> Jackets (filtered) and checkout with discount and shipping", async ({
+    page,
+  }) => {
+    await basePage.navigateToWomenTopsJackets();
+    await expect(page.locator("#page-title-heading span.base")).toHaveText("Jackets");
 
-  // Apply discount and set shipping
-  await checkout.applyDiscountCode(testData.discountCode);
-  await checkout.setShippingCountry(testData.shippingCountry);
+    await productListingPage.applyFilter(
+      testData.women.name,
+      testData.women.type
+    );
 
-  // Assert discount applied
-  const discount = await checkout.getDiscountAmount();
-  expect(discount).not.toBeNull();
-}); 
+    await expect(page).toHaveURL(/style_general=116/, { timeout: 120_000 });
+
+    await productListingPage.addRandomProductToCart();
+
+    await productListingPage.proceedToCheckoutFromMiniCart();
+    await expect(page).toHaveURL(/.*checkout/);
+
+    await checkoutPage.selectShippingMethod();
+
+    await checkoutPage.applyDiscountCode(testData.discountCode);
+
+    const discountAmount = await checkoutPage.getDiscountAmount();
+    const totalAfterDiscount = await checkoutPage.getOrderTotal();
+
+    if (!(discountAmount > 0)) {
+      throw new Error("Discount amount should be greater than 0");
+    }
+    expect(totalAfterDiscount).toBeGreaterThan(discountAmount);
+
+    await checkoutPage.placeOrderAndVerifySuccess();
+  });
+});

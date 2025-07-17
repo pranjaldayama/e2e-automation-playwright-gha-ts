@@ -1,51 +1,71 @@
-import { test, expect } from '../fixtures/baseFixture';
-import { HomePage } from '../../pages/homePage';
-import { ProductListingPage } from '../../pages/productListingPage';
-import { ProductDetailsPage } from '../../pages/productDetailsPage';
-import { ShoppingCartPage } from '../../pages/shoppingCartPage';
-import { CheckoutPage } from '../../pages/checkoutPage';
-import { testData } from '../../utils/testData';
-import { logSkip } from '../../utils/helpers';
+import { test, expect } from "@playwright/test";
+import { ProductListingPage } from "../../pages/productListingPage";
+import { CheckoutPage } from "../../pages/checkoutPage";
+import { testData } from "../../utils/testData";
+import { dismissAnnoyances } from "../../utils/helpers";
+import { BasePage } from "../../pages/basePage";
 
-const BASE_URL = 'https://magento.softwaretestingboard.com/';
+test.describe("Gear Category Tests", () => {
+  let basePage: BasePage;
+  let productListingPage: ProductListingPage;
+  let checkoutPage: CheckoutPage;
 
-test('Gear: Add random Yoga Bag to cart and checkout with discount', async ({ page }) => {
-  const home = new HomePage(page);
-  const listing = new ProductListingPage(page);
-  const details = new ProductDetailsPage(page);
-  const cart = new ShoppingCartPage(page);
-  const checkout = new CheckoutPage(page);
+  test.beforeEach(async ({ page }) => {
+    basePage = new BasePage(page);
+    productListingPage = new ProductListingPage(page);
+    checkoutPage = new CheckoutPage(page);
 
-  await home.goto(BASE_URL);
-  await home.navigateToGearBags();
+    await page.route("**#google_vignette", (route) => {
+      route.abort();
+    });
 
-  // Apply filter for Activity Yoga
-  const activityApplied = await listing.applyFilter('Activity', testData.gear.activity);
-  if (!activityApplied) {
-    logSkip('No bags found for Activity Yoga');
-    test.skip();
-  }
+    await page.route(
+      /googlesyndication\.com|googleadservices\.com|doubleclick\.net|google-analytics\.com/,
+      (route) => {
+        route.abort();
+      },
+    );
 
-  // Select random product
-  const productSelected = await listing.selectRandomProduct();
-  if (!productSelected) {
-    logSkip('No product available after filtering');
-    test.skip();
-  }
+    await basePage.login(testData.baseUrl);
+    await dismissAnnoyances(page);
+  });
 
-  // Set quantity and add to cart
-  await details.setQuantity(testData.gear.quantity);
-  await details.addToCart();
+  test("Add product from Gear -> Bags (Yoga filter) and checkout with discount and shipping", async ({
+    page,
+  }) => {
+    await basePage.navigateToGearBags();
+    await expect(page.locator("#page-title-heading span.base")).toHaveText(
+      "Bags",
+    );
 
-  // Go to cart and checkout
-  await page.goto(BASE_URL + 'checkout/cart/');
-  await cart.proceedToCheckout();
+    await productListingPage.applyFilter(
+      testData.gear.name,
+      testData.gear.activity,
+    );
 
-  // Apply discount and set shipping
-  await checkout.applyDiscountCode(testData.discountCode);
-  await checkout.setShippingCountry(testData.shippingCountry);
+    await expect(page).toHaveURL(/activity=8/, { timeout: 120_000 });
 
-  // Assert discount applied
-  const discount = await checkout.getDiscountAmount();
-  expect(discount).not.toBeNull();
-}); 
+    await productListingPage.addRandomProductToCart();
+
+    await productListingPage.proceedToCheckoutFromMiniCart();
+    await expect(page).toHaveURL(/.*checkout/);
+
+    // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored');
+    //await checkoutPage.fillShippingAddress(testData);
+
+    await checkoutPage.selectShippingMethod();
+
+    await checkoutPage.applyDiscountCode(testData.discountCode);
+
+    const discountAmount = await checkoutPage.getDiscountAmount();
+    const totalAfterDiscount = await checkoutPage.getOrderTotal();
+
+
+    if (!(discountAmount > 0)) {
+      throw new Error("Discount amount should be greater than 0");
+    }
+    expect(totalAfterDiscount).toBeGreaterThan(discountAmount);
+
+    await checkoutPage.placeOrderAndVerifySuccess();
+  });
+});
