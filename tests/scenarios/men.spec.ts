@@ -46,12 +46,14 @@ test.describe("Mens Category Tests", () => {
 
     await expect(page).toHaveURL(/style_general=117/, { timeout: 120_000 });
 
-
     await productListingPage.addRandomProductToCart();
 
     await productListingPage.proceedToCheckoutFromMiniCart();
     await expect(page).toHaveURL(/.*checkout/);
 
+    // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored');
+    //await checkoutPage.fillShippingAddress(testData);
+    
     await checkoutPage.selectShippingMethod();
 
     await checkoutPage.applyDiscountCode(testData.discountCode);
