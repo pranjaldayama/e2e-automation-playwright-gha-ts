@@ -1,4 +1,3 @@
-// tests/scenarios/men.spec.ts
 
 import { test, expect } from "@playwright/test";
 import { ProductListingPage } from "../../pages/productListingPage";
@@ -49,6 +48,9 @@ test.describe("Womens Category Tests", () => {
 
     await productListingPage.proceedToCheckoutFromMiniCart();
     await expect(page).toHaveURL(/.*checkout/);
+
+    // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored');
+    //await checkoutPage.fillShippingAddress(testData);
 
     await checkoutPage.selectShippingMethod();
 
