@@ -52,6 +52,10 @@ test.describe("Mens Category Tests", () => {
     await productListingPage.proceedToCheckoutFromMiniCart();
     await expect(page).toHaveURL(/.*checkout/);
 
+    // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored');
+    //await checkoutPage.fillShippingAddress(testData);
+    
+
    // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored.
    // await checkoutPage.fillShippingAddress(testData); // This line is commented out as per the note above.
 

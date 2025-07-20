@@ -1,4 +1,3 @@
-// tests/scenarios/men.spec.ts
 
 import { test, expect } from "@playwright/test";
 import { ProductListingPage } from "../../pages/productListingPage";

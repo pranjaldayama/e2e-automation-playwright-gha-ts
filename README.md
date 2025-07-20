@@ -70,6 +70,11 @@ e2e-automation-playwright-gha-ts/
 - **Women:** Add 2x XS Blue Jacket to cart, checkout, apply discount, set shipping to Netherlands.
 - **Gear:** Add random Yoga Bag to cart, checkout, apply discount, set shipping to Netherlands.
 
+- ## Test Execution Results
+- 
+<img width="1015" height="279" alt="image" src="https://github.com/user-attachments/assets/d31a42b1-4436-4b4a-a2e3-73bbb5631c3e" />
+<img width="879" height="900" alt="image" src="https://github.com/user-attachments/assets/7c0e45ee-f472-4c1a-927f-1747855a4d9a" />
+
 ## Dynamic Data Handling
 
 - If filters return no results (e.g., no jackets in blue/XS), the test is skipped gracefully and logs the reason.
