@@ -54,10 +54,6 @@ test.describe("Mens Category Tests", () => {
 
     // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored');
     //await checkoutPage.fillShippingAddress(testData);
-    
-
-   // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored.
-   // await checkoutPage.fillShippingAddress(testData); // This line is commented out as per the note above.
 
     await checkoutPage.selectShippingMethod();
 
