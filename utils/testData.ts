@@ -14,12 +14,18 @@ export const testData =   {
   men: {
     category: ['Men', 'Tops', 'Jackets'],
     name: 'Style',
-    type: 'Jacket'
+    type: 'Jacket',
+    size: 'M',
+    quantity: 1,
+    color: 'Black',
   },
   women: {
     category: ['Women', 'Tops', 'Jackets'],
     name: 'Style',
-    type: 'Insulated'
+    type: 'Insulated',
+    size: 'M',
+    color: 'Black',
+    quantity: 1,
   },
   gear: {
     name: 'Activity',

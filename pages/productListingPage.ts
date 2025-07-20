@@ -39,74 +39,6 @@ export class ProductListingPage extends BasePage {
     );
   }
 
-  async applyFilter(categoryName: string, optionName: string) {
-    const categoryTitle = this.getFilterCategoryTitle(categoryName);
-    const categoryContent = this.getFilterCategoryContent(categoryName);
-    const optionLink = this.getFilterOptionLink(categoryName, optionName);
-
-    if ((await categoryTitle.getAttribute("aria-expanded")) === "false") {
-      await categoryTitle.click();
-      await expect(categoryTitle).toHaveAttribute("aria-expanded", "true");
-      await expect(categoryContent).toBeVisible();
-    } else {
-      console.log(`Category "${categoryName}" is already expanded.`);
-    }
-    const activityTitle = this.page.locator(
-      `div.filter-options-title[role="tab"]:has-text("${categoryName}")`,
-    );
-    if ((await activityTitle.getAttribute("aria-expanded")) === "false") {
-      await activityTitle.click();
-      await expect(activityTitle).toHaveAttribute("aria-expanded", "true");
-      await expect(
-        this.page.locator(
-          `div[data-role="collapsible"]:has(div[data-role="title"]:has-text("${categoryName}")) div[data-role="content"]`,
-        ),
-      ).toBeVisible();
-    }
-    await this.page.locator(`div[data-role="collapsible"]:has(div[data-role="title"]:has-text("${categoryName}")) div[data-role="content"] ol.items li.item a:has-text("${optionName}")`).click();                            
-  }
-
-  async addRandomProductToCart() {
-    await this.page.waitForSelector(".product-item", {
-      state: "visible",
-      timeout: 10000,
-    });
-
-    const productItems = this.page.locator(".product-item");
-    const count = await productItems.count();
-    if (count === 0) {
-      throw new Error("No products found on the listing page.");
-    }
-
-    const randomIndex = Math.floor(Math.random() * count);
-    const randomProduct = productItems.nth(randomIndex);
-    const productName = await randomProduct
-      .locator(".product-item-name a, .product-item-link")
-      .textContent();
-    await randomProduct.click();
-    const addToCartButtonByRole = this.page.getByRole("button", {
-      name: "Add to Cart",
-    });
-    const possibleLoadingMask = this.page.locator(".loading-mask");
-    if (await possibleLoadingMask.isVisible()) {
-      await expect(possibleLoadingMask).toBeHidden({ timeout: 15000 });
-    }
-
-    await addToCartButtonByRole.click();
-
-    try {
-      await expect(this.page.locator(".message-success")).toBeVisible({
-        timeout: 15000,
-      });
-    } catch (error: any) {
-      console.error(
-        `Failed to add product "${productName}" to cart: Product Selected is Out of Stock.`,
-        error.message,
-      );
-      throw error;
-    }
-  }
-
   async proceedToCheckoutFromMiniCart() {
     await this.miniCartButton.waitFor({ state: "visible" });
     await this.miniCartButton.click();
@@ -118,5 +50,115 @@ export class ProductListingPage extends BasePage {
     await this.proceedToCheckoutButton.click();
 
     await this.page.waitForURL(/.*checkout/, { waitUntil: "domcontentloaded" });
+  }
+
+  async applyFilterAndAddRandomProductToCart(
+    categoryName: string,
+    optionName: string,
+    desiredSize?: string,
+    desiredColor?: string,  // This is not used in the code, but is kept for future reference.
+    desiredQuantity: number = 1
+  ): Promise<string | null> {
+    try {
+      const categoryFilterSelector = `//div[contains(@class, "filter-options-title") and normalize-space()="${categoryName}"]`;
+      const filterTitle = this.page.locator(categoryFilterSelector);
+      if (await filterTitle.isVisible()) {
+        await filterTitle.click();
+      }
+  
+      const optionSelector = `//div[contains(@class,"filter-options-content") and preceding-sibling::div[normalize-space()="${categoryName}"]]//a[contains(text(), "${optionName}")]`;
+      const filterOption = this.page.locator(optionSelector);
+      await filterOption.click();
+  
+      await this.page.waitForSelector('.product-item');
+  
+      const products = await this.page.$$eval('.product-item-info a.product-item-link', (links) =>
+        links.map((link) => (link as HTMLAnchorElement).href)
+      );
+  
+      if (products.length === 0) {
+        console.warn('⚠️ No products found after applying the filter.');
+        return null;
+      }
+  
+      const randomIndex = Math.floor(Math.random() * products.length);
+      const randomProductUrl = products[randomIndex];
+      console.log(`🎯 Navigating to: ${randomProductUrl}`);
+  
+      await this.page.goto(randomProductUrl, { waitUntil: 'domcontentloaded' });
+  
+      if (categoryName === "Women" || categoryName === "Men") {
+       const sizeOptions = await this.page.locator('.swatch-attribute.size .swatch-option.text').all();
+        let selectedSizeElement;
+  
+        if (sizeOptions.length > 0) {
+          if (desiredSize) {
+            selectedSizeElement = sizeOptions.find(async (opt) => (await opt.getAttribute('option-label'))?.toUpperCase() === desiredSize.toUpperCase());
+            if (!selectedSizeElement) {
+              console.warn(`Desired size "${desiredSize}" not found. Selecting a random available size.`);
+              selectedSizeElement = sizeOptions[Math.floor(Math.random() * sizeOptions.length)];
+            }
+          } else {
+            selectedSizeElement = sizeOptions[Math.floor(Math.random() * sizeOptions.length)];
+          }
+  
+          if (selectedSizeElement) {
+            console.log(`Selecting size: ${await selectedSizeElement.getAttribute('option-label')}`);
+            await selectedSizeElement.click();
+            await this.page.waitForTimeout(500);
+          } else {
+            console.warn("No size options to select.");
+          }
+        } else {
+          console.log("No size options found for this product.");
+        }
+       
+        const colorOptions = await this.page.locator('.swatch-attribute.color .swatch-option.color').all();
+        let selectedColorElement;
+  
+        if (colorOptions.length > 0) {
+          if (desiredColor) {
+            selectedColorElement = colorOptions.find(async (opt) => (await opt.getAttribute('option-label'))?.toUpperCase() === desiredColor.toUpperCase());
+            if (!selectedColorElement) {
+              console.warn(`Desired color "${desiredColor}" not found. Selecting a random available color.`);
+              selectedColorElement = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+            }
+          } else {
+            selectedColorElement = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+          }
+  
+          if (selectedColorElement) {
+            console.log(`Selecting color: ${await selectedColorElement.getAttribute('option-label')}`);
+            await selectedColorElement.click();
+            await this.page.waitForTimeout(500);
+          } else {
+            console.warn("No color options to select.");
+          }
+        } else {
+          console.log("No color options found for this product.");
+        }
+  
+  
+      const qtyInput = this.page.locator('#qty');
+        if (await qtyInput.isVisible()) {
+          console.log(`Setting quantity to: ${desiredQuantity}`);
+          await qtyInput.fill(desiredQuantity.toString());
+        } else {
+          console.warn("Quantity input field not found.");
+        }
+      }
+  
+      const addToCartButton = this.page.locator('button.tocart');
+      await addToCartButton.waitFor({ state: 'visible', timeout: 5000 });
+      await addToCartButton.click();
+  
+      await this.page.waitForSelector('.message-success', { timeout: 5000 });
+      console.log('✅ Product added to cart successfully!');
+  
+      return randomProductUrl;
+    } catch (err) {
+      console.error('❌ Error in applyFilterAndAddRandomProductToCart:', err);
+      return null;
+    }
   }
 }

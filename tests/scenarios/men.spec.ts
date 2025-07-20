@@ -39,18 +39,21 @@ test.describe("Mens Category Tests", () => {
       "Jackets",
     );
 
-    await productListingPage.applyFilter(
+    await productListingPage.applyFilterAndAddRandomProductToCart(
       testData.men.name,
-      testData.men.type
+      testData.men.type,
+      testData.men.size,
+      testData.men.color,
+      testData.men.quantity
     );
 
     await expect(page).toHaveURL(/style_general=117/, { timeout: 120_000 });
 
-
-    await productListingPage.addRandomProductToCart();
-
     await productListingPage.proceedToCheckoutFromMiniCart();
     await expect(page).toHaveURL(/.*checkout/);
+
+   // Fill shipping address for Netherlands - Not needed for this test user as the shipping address is already stored.
+   // await checkoutPage.fillShippingAddress(testData); // This line is commented out as per the note above.
 
     await checkoutPage.selectShippingMethod();
 
