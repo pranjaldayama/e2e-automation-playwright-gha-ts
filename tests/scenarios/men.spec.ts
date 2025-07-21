@@ -41,10 +41,7 @@ test.describe("Mens Category Tests", () => {
 
     await productListingPage.applyFilterAndAddRandomProductToCart(
       testData.men.name,
-      testData.men.type,
-      testData.men.size,
-      testData.men.color,
-      testData.men.quantity
+      testData.men.size
     );
 
     await expect(page).toHaveURL(/style_general=117/, { timeout: 120_000 });

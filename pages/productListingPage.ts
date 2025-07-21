@@ -56,7 +56,7 @@ export class ProductListingPage extends BasePage {
     categoryName: string,
     optionName: string,
     desiredSize?: string,
-    desiredColor?: string,  // This is not used in the code, but is kept for future reference.
+    desiredColor?: string,
     desiredQuantity: number = 1
   ): Promise<string | null> {
     try {
@@ -77,7 +77,7 @@ export class ProductListingPage extends BasePage {
       );
   
       if (products.length === 0) {
-        console.warn('⚠️ No products found after applying the filter.');
+        console.warn(' No products found after applying the filter.');
         return null;
       }
   
@@ -89,7 +89,8 @@ export class ProductListingPage extends BasePage {
   
       if (categoryName === "Women" || categoryName === "Men") {
        const sizeOptions = await this.page.locator('.swatch-attribute.size .swatch-option.text').all();
-        let selectedSizeElement;
+        
+       let selectedSizeElement;
   
         if (sizeOptions.length > 0) {
           if (desiredSize) {
@@ -153,11 +154,11 @@ export class ProductListingPage extends BasePage {
       await addToCartButton.click();
   
       await this.page.waitForSelector('.message-success', { timeout: 5000 });
-      console.log('✅ Product added to cart successfully!');
+      console.log('Product added to cart successfully!');
   
       return randomProductUrl;
     } catch (err) {
-      console.error('❌ Error in applyFilterAndAddRandomProductToCart:', err);
+      console.error('Error in applyFilterAndAddRandomProductToCart:', err);
       return null;
     }
   }

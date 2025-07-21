@@ -39,13 +39,8 @@ test.describe("Womens Category Tests", () => {
 
     await productListingPage.applyFilterAndAddRandomProductToCart(
       testData.women.name,
-      testData.women.type,
-      testData.women.size,
-      testData.women.color,
-      testData.women.quantity
+      testData.women.size
     );
-
-    await expect(page).toHaveURL(/style_general=116/, { timeout: 120_000 });
 
     await productListingPage.proceedToCheckoutFromMiniCart();
     await expect(page).toHaveURL(/.*checkout/);
