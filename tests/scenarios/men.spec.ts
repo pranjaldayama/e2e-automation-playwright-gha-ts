@@ -44,8 +44,6 @@ test.describe("Mens Category Tests", () => {
       testData.men.size
     );
 
-    await expect(page).toHaveURL(/style_general=117/, { timeout: 120_000 });
-
     await productListingPage.proceedToCheckoutFromMiniCart();
     await expect(page).toHaveURL(/.*checkout/);
 

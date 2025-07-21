@@ -42,8 +42,6 @@ test.describe("Gear Category Tests", () => {
       testData.gear.name,
       testData.gear.activity,
     );
-
-    //await expect(page).toHaveURL(/activity=8/, { timeout: 120_000 });
     
     await productListingPage.proceedToCheckoutFromMiniCart();
     await expect(page).toHaveURL(/.*checkout/);
